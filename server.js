@@ -7,7 +7,6 @@ const rateLimit = require('express-rate-limit');
 
 console.log("MONGO_URI from env:", process.env.MONGO_URI);
 
-
 const connectDB = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const blogRoutes = require('./routes/blogRoutes');
@@ -15,9 +14,11 @@ const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express(); 
 
-// Connect to MongoDB
-connectDB();
- 
+// ✅ Only connect to DB if NOT in test mode
+if (process.env.NODE_ENV !== 'test') {
+  connectDB();
+}
+
 // Security middleware
 app.use(helmet());
 app.use(cors());  
@@ -63,17 +64,23 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 
-const server = app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+// ✅ Only start server if NOT in test mode
+let server;
+if (process.env.NODE_ENV !== 'test') {
+  server = app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  });
+}
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Shutting down gracefully...');
-  server.close(() => {
-    console.log('Process terminated');
+if (server) {
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received. Shutting down gracefully...');
+    server.close(() => {
+      console.log('Process terminated');
+    });
   });
-});
+}
 
-module.exports = app; 
+module.exports = app;

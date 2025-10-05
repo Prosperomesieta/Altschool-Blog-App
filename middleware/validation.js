@@ -1,7 +1,25 @@
 const Joi = require('joi');
 
-// Validation middleware factory
+// Validation middleware factory (returns 'fail' status)
 const validate = (schema) => {
+  return (req, res, next) => {
+    const { error } = schema.validate(req.body, { abortEarly: false });
+    
+    if (error) {
+      const errors = error.details.map(detail => detail.message);
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Validation failed',
+        errors
+      });
+    }
+    
+    next();
+  };
+};
+
+// Validation middleware for auth routes (returns 'error' status)
+const validateAuth = (schema) => {
   return (req, res, next) => {
     const { error } = schema.validate(req.body, { abortEarly: false });
     
@@ -184,9 +202,10 @@ const validateQuery = (req, res, next) => {
 
 module.exports = {
   validate,
+  validateAuth,
   validateQuery,
   registerSchema,
   loginSchema,
   createBlogSchema,
   updateBlogSchema 
-}; 
+};

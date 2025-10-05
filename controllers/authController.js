@@ -33,7 +33,10 @@ const register = catchAsync(async (req, res, next) => {
   // Check if user already exists
   const existingUser = await User.findByEmail(email);
   if (existingUser) {
-    return next(new AppError('User with this email already exists', 400));
+    return res.status(400).json({
+      status: 'error',
+      message: 'User with this email already exists'
+    });
   }
 
   // Create new user
@@ -55,7 +58,10 @@ const login = catchAsync(async (req, res, next) => {
   const user = await User.findByEmail(email).select('+password');
   
   if (!user || !(await user.comparePassword(password))) {
-    return next(new AppError('Invalid email or password', 401));
+    return res.status(401).json({
+      status: 'error',
+      message: 'Invalid email or password'
+    });
   }
 
   createSendToken(user, 200, res, 'Login successful');
@@ -77,7 +83,10 @@ const updateProfile = catchAsync(async (req, res, next) => {
   
   // Don't allow password updates through this endpoint
   if (req.body.password) {
-    return next(new AppError('Password updates not allowed through this endpoint', 400));
+    return res.status(400).json({
+      status: 'error',
+      message: 'Password updates not allowed through this endpoint'
+    });
   }
 
   // Check if email is being changed and if it's already taken

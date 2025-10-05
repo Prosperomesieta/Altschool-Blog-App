@@ -1,8 +1,58 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 
-// Middleware to verify JWT token
+// Middleware to verify JWT token (returns 'fail' status)
 const authenticateToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (!token) {
+      return res.status(401).json({
+        status: 'fail',
+        message: 'Access token is required'
+      });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Find user and attach to request
+    const user = await User.findById(decoded.userId).select('-password');
+    
+    if (!user) {
+      return res.status(401).json({
+        status: 'fail',
+        message: 'Invalid token - user not found'
+      });
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        status: 'fail',
+        message: 'Token has expired'
+      });
+    }
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        status: 'fail',
+        message: 'Invalid token'
+      });
+    }
+
+    return res.status(500).json({
+      status: 'error',
+      message: 'Token verification failed'
+    });
+  }
+};
+
+// Auth middleware for auth routes (returns 'error' status)
+const authenticateTokenAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -75,5 +125,6 @@ const optionalAuth = async (req, res, next) => {
 
 module.exports = {
   authenticateToken,
+  authenticateTokenAuth,
   optionalAuth
 };

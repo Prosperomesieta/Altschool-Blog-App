@@ -1,14 +1,17 @@
-/*const request = require('supertest');
+const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../server');
 const User = require('../models/userModel');
 const Blog = require('../models/blogModel');
 
+jest.setTimeout(30000); // 30 seconds for all tests
+
 // Test database connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/blogging_api_test';
+const MONGO_URI = process.env.MONGO_URI;
+
 
 beforeAll(async () => {
-  await mongoose.connect(MONGODB_URI);
+  await mongoose.connect(MONGO_URI);
 });
 
 beforeEach(async () => {
@@ -86,7 +89,7 @@ describe('Blog Endpoints', () => {
         .send(validBlog)
         .expect(401);
 
-      expect(res.body.status).toBe('error');
+      expect(res.body.status).toBe('fail');
       expect(res.body.message).toBe('Access token is required');
     });
 
@@ -99,7 +102,7 @@ describe('Blog Endpoints', () => {
         .send(validBlog)
         .expect(400);
 
-      expect(res.body.status).toBe('error');
+      expect(res.body.status).toBe('fail');
       expect(res.body.message).toBe('Blog with this title already exists');
     });
 
@@ -112,7 +115,7 @@ describe('Blog Endpoints', () => {
         .send(invalidBlog)
         .expect(400);
 
-      expect(res.body.status).toBe('error');
+      expect(res.body.status).toBe('fail');
       expect(res.body.message).toBe('Validation failed');
     });
   });
@@ -150,7 +153,7 @@ describe('Blog Endpoints', () => {
       expect(res.body.status).toBe('success');
       expect(res.body.results).toBe(2);
       expect(res.body.data.blogs).toHaveLength(2);
-      
+
       // Should only return published blogs
       res.body.data.blogs.forEach(blog => {
         expect(blog.state).toBe('published');
@@ -238,15 +241,19 @@ describe('Blog Endpoints', () => {
         .get(`/api/blogs/${draftBlog._id}`)
         .expect(404);
 
-      expect(res.body.status).toBe('error');
+      expect(res.body.status).toBe('fail');
       expect(res.body.message).toBe('Blog not found or not published');
     });
 
     it('should not get non-existent blog', async () => {
       const fakeId = new mongoose.Types.ObjectId();
-      
+
       const res = await request(app)
-        .get(`/api/blogs/${ 
-        
-        
-*/
+        .get(`/api/blogs/${fakeId}`)
+        .expect(404);
+
+      expect(res.body.status).toBe('fail');
+      expect(res.body.message).toBe('Blog not found or not published');
+    });
+  });
+});

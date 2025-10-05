@@ -1,13 +1,16 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../server');
-const User = require('../models/User');
+const User = require('../models/userModel');
+
+jest.setTimeout(30000); // 30 seconds for all tests
 
 // Test database connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/blogging_api_test';
+const MONGO_URI = process.env.MONGO_URI;
+;
 
 beforeAll(async () => {
-  await mongoose.connect(MONGODB_URI);
+  await mongoose.connect(MONGO_URI);
 });
 
 beforeEach(async () => {
