@@ -1,11 +1,11 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 
-
+// Middleware to verify JWT token (returns 'fail' status)
 const authenticateToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1]; 
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
     if (!token) {
       return res.status(401).json({
@@ -14,10 +14,10 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-
+    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-
+    // Find user and attach to request
     const user = await User.findById(decoded.userId).select('-password');
     
     if (!user) {
@@ -51,7 +51,7 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
-
+// Auth middleware for auth routes (returns 'error' status)
 const authenticateTokenAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -64,10 +64,10 @@ const authenticateTokenAuth = async (req, res, next) => {
       });
     }
 
-    
+    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
- 
+    // Find user and attach to request
     const user = await User.findById(decoded.userId).select('-password');
     
     if (!user) {
@@ -101,7 +101,7 @@ const authenticateTokenAuth = async (req, res, next) => {
   }
 };
 
-
+// Optional authentication middleware (doesn't fail if no token)
 const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -118,7 +118,7 @@ const optionalAuth = async (req, res, next) => {
     
     next();
   } catch (error) {
- 
+    // Continue without authentication if token is invalid
     next();
   }
 };

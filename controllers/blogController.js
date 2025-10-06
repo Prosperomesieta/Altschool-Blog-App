@@ -2,7 +2,7 @@ const Blog = require('../models/blogModel');
 const User = require('../models/userModel');
 const { AppError, catchAsync } = require('../middleware/errorHandler');
 
-
+// Get all published blogs (public endpoint)
 const getAllBlogs = catchAsync(async (req, res, next) => {
   const {
     page = 1,
@@ -14,10 +14,10 @@ const getAllBlogs = catchAsync(async (req, res, next) => {
     tags
   } = req.query;
 
-
+  // Build query for published blogs only
   let query = { state: 'published' };
 
-
+  // Add search functionality
   if (search) {
     query.$or = [
       { title: { $regex: search, $options: 'i' } },
@@ -25,7 +25,7 @@ const getAllBlogs = catchAsync(async (req, res, next) => {
     ];
   }
 
-
+  // Filter by author name
   if (author) {
     const authorUser = await User.findOne({
       $or: [
@@ -37,7 +37,7 @@ const getAllBlogs = catchAsync(async (req, res, next) => {
     if (authorUser) {
       query.author = authorUser._id;
     } else {
-
+      // If author not found, return empty results
       return res.status(200).json({
         status: 'success',
         results: 0,
@@ -54,22 +54,22 @@ const getAllBlogs = catchAsync(async (req, res, next) => {
     }
   }
 
-
+  // Filter by tags
   if (tags) {
     const tagArray = tags.split(',').map(tag => tag.trim().toLowerCase());
     query.tags = { $in: tagArray };
   }
 
-
+  // Calculate pagination
   const skip = (page - 1) * limit;
   const total = await Blog.countDocuments(query);
   const pages = Math.ceil(total / limit);
 
-
+  // Build sort object
   const sort = {};
   sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-
+  // Execute query
   const blogs = await Blog.find(query)
     .populate('author', 'first_name last_name email')
     .sort(sort)
@@ -92,7 +92,7 @@ const getAllBlogs = catchAsync(async (req, res, next) => {
   });
 });
 
-
+// Get single blog by ID (public endpoint)
 const getBlog = catchAsync(async (req, res, next) => {
   const blog = await Blog.findOne({
     _id: req.params.id,
@@ -103,7 +103,7 @@ const getBlog = catchAsync(async (req, res, next) => {
     return next(new AppError('Blog not found or not published', 404));
   }
 
-
+  // Increment read count
   await blog.incrementReadCount();
 
   res.status(200).json({
@@ -114,11 +114,11 @@ const getBlog = catchAsync(async (req, res, next) => {
   });
 });
 
-
+// Create new blog (authenticated)
 const createBlog = catchAsync(async (req, res, next) => {
   const { title, description, body, tags } = req.body;
 
-
+  // Check if title already exists
   const existingBlog = await Blog.findOne({ title });
   if (existingBlog) {
     return next(new AppError('Blog with this title already exists', 400));
@@ -132,6 +132,7 @@ const createBlog = catchAsync(async (req, res, next) => {
     author: req.user._id
   });
 
+  // Populate author information
   await blog.populate('author', 'first_name last_name email');
 
   res.status(201).json({
@@ -143,7 +144,7 @@ const createBlog = catchAsync(async (req, res, next) => {
   });
 });
 
-
+// Get user's own blogs (authenticated)
 const getMyBlogs = catchAsync(async (req, res, next) => {
   const {
     page = 1,
@@ -153,23 +154,24 @@ const getMyBlogs = catchAsync(async (req, res, next) => {
     state
   } = req.query;
 
-
+  // Build query for user's blogs
   let query = { author: req.user._id };
 
-
+  // Filter by state if provided
   if (state) {
     query.state = state;
   }
 
+  // Calculate pagination
   const skip = (page - 1) * limit;
   const total = await Blog.countDocuments(query);
   const pages = Math.ceil(total / limit);
 
-
+  // Build sort object
   const sort = {};
   sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-
+  // Execute query
   const blogs = await Blog.find(query)
     .populate('author', 'first_name last_name email')
     .sort(sort)
@@ -191,7 +193,7 @@ const getMyBlogs = catchAsync(async (req, res, next) => {
   });
 });
 
-
+// Update blog (authenticated - owner only)
 const updateBlog = catchAsync(async (req, res, next) => {
   const blog = await Blog.findById(req.params.id);
 
@@ -199,12 +201,12 @@ const updateBlog = catchAsync(async (req, res, next) => {
     return next(new AppError('Blog not found', 404));
   }
 
-  
+  // Check if user is the owner
   if (blog.author.toString() !== req.user._id.toString()) {
     return next(new AppError('You can only update your own blogs', 403));
   }
 
-
+  // Check for title uniqueness if title is being updated
   if (req.body.title && req.body.title !== blog.title) {
     const existingBlog = await Blog.findOne({ title: req.body.title });
     if (existingBlog) {
@@ -212,7 +214,7 @@ const updateBlog = catchAsync(async (req, res, next) => {
     }
   }
 
- 
+  // Update blog
   const updatedBlog = await Blog.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -228,7 +230,7 @@ const updateBlog = catchAsync(async (req, res, next) => {
   });
 });
 
-
+// Delete blog (authenticated - owner only)
 const deleteBlog = catchAsync(async (req, res, next) => {
   const blog = await Blog.findById(req.params.id);
 
@@ -236,7 +238,7 @@ const deleteBlog = catchAsync(async (req, res, next) => {
     return next(new AppError('Blog not found', 404));
   }
 
-
+  // Check if user is the owner
   if (blog.author.toString() !== req.user._id.toString()) {
     return next(new AppError('You can only delete your own blogs', 403));
   }
@@ -249,6 +251,7 @@ const deleteBlog = catchAsync(async (req, res, next) => {
   });
 });
 
+// Update blog state (authenticated - owner only)
 const updateBlogState = catchAsync(async (req, res, next) => {
 
   const { state } = req.body;
@@ -263,7 +266,7 @@ const updateBlogState = catchAsync(async (req, res, next) => {
     return next(new AppError('Blog not found', 404));
   }
 
-
+  // Check if user is the owner
   if (blog.author.toString() !== req.user._id.toString()) {
     return next(new AppError('You can only update your own blogs', 403));
   }

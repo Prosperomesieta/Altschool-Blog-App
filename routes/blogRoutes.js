@@ -13,11 +13,11 @@ const { validate, validateQuery, createBlogSchema, updateBlogSchema } = require(
 
 const router = express.Router();
 
-
+// Public routes (no authentication required)
 router.get('/', validateQuery, getAllBlogs);
 router.get('/:id', getBlog); 
 
-
+// Protected routes (authentication required)
 router.use(authenticateToken);
 
 router.post('/', validate(createBlogSchema), createBlog);
