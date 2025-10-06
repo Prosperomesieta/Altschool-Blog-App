@@ -5,12 +5,10 @@ const { validateAuth, registerSchema, loginSchema } = require('../middleware/val
 
 const router = express.Router();
 
-// Public routes
 router.post('/register', validateAuth(registerSchema), register);
 router.post('/login', validateAuth(loginSchema), login);
 
-// Protected routes
-router.use(authenticateTokenAuth); // All routes after this middleware require authentication
+router.use(authenticateTokenAuth); 
 
 router.get('/profile', getProfile);
 router.patch('/profile', updateProfile);
