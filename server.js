@@ -14,16 +14,16 @@ const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express(); 
 
-// ✅ Only connect to DB if NOT in test mode
+
 if (process.env.NODE_ENV !== 'test') {
   connectDB();
 }
 
-// Security middleware
+
 app.use(helmet());
 app.use(cors());  
 
-// Rate limiting
+
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
@@ -33,12 +33,12 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Body parsing middleware
+
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoint
+
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'success',
@@ -47,11 +47,11 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API routes
+
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 
-// 404 handler
+
 app.use((req, res) => {
   res.status(404).json({
     status: 'error',
@@ -59,12 +59,12 @@ app.use((req, res) => {
   });
 });
 
-// Global error handler 
+
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 
-// ✅ Only start server if NOT in test mode
+
 let server;
 if (process.env.NODE_ENV !== 'test') {
   server = app.listen(PORT, () => {
@@ -73,7 +73,7 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-// Graceful shutdown
+
 if (server) {
   process.on('SIGTERM', () => {
     console.log('SIGTERM received. Shutting down gracefully...');
