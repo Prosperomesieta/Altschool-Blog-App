@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-// Validation middleware factory (returns 'fail' status)
+
 const validate = (schema) => {
   return (req, res, next) => {
     const { error } = schema.validate(req.body, { abortEarly: false });
@@ -18,7 +18,7 @@ const validate = (schema) => {
   };
 };
 
-// Validation middleware for auth routes (returns 'error' status)
+
 const validateAuth = (schema) => {
   return (req, res, next) => {
     const { error } = schema.validate(req.body, { abortEarly: false });
@@ -36,7 +36,7 @@ const validateAuth = (schema) => {
   };
 };
 
-// User registration validation schema
+
 const registerSchema = Joi.object({
   first_name: Joi.string()
     .min(2)
@@ -75,7 +75,7 @@ const registerSchema = Joi.object({
     })
 });
 
-// User login validation schema
+
 const loginSchema = Joi.object({
   email: Joi.string()
     .email()
@@ -92,7 +92,7 @@ const loginSchema = Joi.object({
     })
 });
 
-// Blog creation validation schema
+
 const createBlogSchema = Joi.object({
   title: Joi.string()
     .min(5)
@@ -130,7 +130,7 @@ const createBlogSchema = Joi.object({
     })
 });
 
-// Blog update validation schema
+
 const updateBlogSchema = Joi.object({
   title: Joi.string()
     .min(5)
@@ -171,7 +171,7 @@ const updateBlogSchema = Joi.object({
   'object.min': 'At least one field must be provided for update'
 });
 
-// Query parameter validation schemas
+
 const paginationSchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(20),
@@ -183,7 +183,7 @@ const paginationSchema = Joi.object({
   tags: Joi.string()
 });
 
-// Validate query parameters
+
 const validateQuery = (req, res, next) => {
   const { error, value } = paginationSchema.validate(req.query);
   

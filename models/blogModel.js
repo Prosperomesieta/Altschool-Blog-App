@@ -33,7 +33,7 @@ const blogSchema = new mongoose.Schema({
     min: 0
   },
   reading_time: {
-    type: Number, // in minutes
+    type: Number, 
     default: 0,
     min: 0
   },
@@ -56,49 +56,49 @@ const blogSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Index for better query performance
+
 blogSchema.index({ author: 1, state: 1 });
 blogSchema.index({ state: 1, created_at: -1 });
 blogSchema.index({ title: 'text', tags: 'text' });
 
-// Calculate reading time before saving
+
 blogSchema.pre('save', function(next) {
   if (this.isModified('body')) {
-    // Calculate reading time based on average reading speed of 200 words per minute
+    
     const wordCount = this.body.split(/\s+/).length;
     this.reading_time = Math.ceil(wordCount / 200);
   }
   next();
 });
 
-// Virtual for formatted creation date
+
 blogSchema.virtual('formatted_date').get(function() {
   return this.created_at.toDateString();
 });
 
-// Static method to find published blogs
+
 blogSchema.statics.findPublished = function() {
   return this.find({ state: 'published' });
 };
 
-// Static method to find blogs by author
+
 blogSchema.statics.findByAuthor = function(authorId) {
   return this.find({ author: authorId });
 };
 
-// Instance method to increment read count
+
 blogSchema.methods.incrementReadCount = function() {
   this.read_count += 1;
   return this.save();
 };
 
-// Instance method to publish blog
+
 blogSchema.methods.publish = function() {
   this.state = 'published';
   return this.save();
 };
 
-// Instance method to unpublish blog
+
 blogSchema.methods.unpublish = function() {
   this.state = 'draft';
   return this.save();

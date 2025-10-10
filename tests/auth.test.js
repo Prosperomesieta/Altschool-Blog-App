@@ -3,9 +3,9 @@ const mongoose = require('mongoose');
 const app = require('../server');
 const User = require('../models/userModel');
 
-jest.setTimeout(30000); // 30 seconds for all tests
+jest.setTimeout(30000); 
 
-// Test database connection
+
 const MONGO_URI = process.env.MONGO_URI;
 ;
 
@@ -85,7 +85,7 @@ describe('Auth Endpoints', () => {
         .send({
           email: 'test@example.com',
           password: 'password123'
-          // Missing first_name and last_name
+          
         })
         .expect(400);
 
@@ -145,7 +145,7 @@ describe('Auth Endpoints', () => {
         .post('/api/auth/login')
         .send({
           email: validUser.email
-          // Missing password
+          
         })
         .expect(400);
 
